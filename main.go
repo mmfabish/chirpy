@@ -4,6 +4,8 @@ import (
 	"net/http"
 )
 
+const filepathRoot = "."
+
 func healthCheckHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(200)
@@ -13,7 +15,7 @@ func healthCheckHandler(w http.ResponseWriter, req *http.Request) {
 func main() {
 	mux := http.NewServeMux()
 
-	mux.Handle("/", http.FileServer(http.Dir(".")))
+	mux.Handle("/app/", http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot))))
 	mux.HandleFunc("/healthz", healthCheckHandler)
 
 	server := http.Server{
