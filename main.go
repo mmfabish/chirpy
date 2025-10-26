@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
+
+	"github.com/mmfabish/chirpy/internal/handlers"
 )
 
 const filepathRoot = "."
@@ -59,6 +61,7 @@ func main() {
 	// api endpoints
 	mux.Handle("/app/", cfg.middlewareMetricsInc(handler))
 	mux.HandleFunc("GET /api/healthz", healthCheckHandler)
+	mux.HandleFunc("POST /api/validate_chirp", handlers.ValidateChirpHandler)
 
 	server := http.Server{
 		Handler: mux,
