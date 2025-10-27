@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"slices"
+	"strings"
 )
 
 type parameters struct {
@@ -11,7 +13,7 @@ type parameters struct {
 }
 
 type response struct {
-	Valid bool `json:"valid"`
+	CleanedBody string `json:"cleaned_body"`
 }
 
 type error struct {
@@ -46,6 +48,19 @@ func respondWithJSON(w http.ResponseWriter, req *http.Request, payload interface
 	w.Write(data)
 }
 
+func filterMessage(message string) string {
+	prohibitedWords := []string{"kerfuffle", "sharbert", "fornax"}
+	words := strings.Split(message, " ")
+
+	for i := 0; i < len(words); i++ {
+		if slices.Contains(prohibitedWords, strings.ToLower(words[i])) {
+			words[i] = "****"
+		}
+	}
+
+	return strings.Join(words, " ")
+}
+
 func ValidateChirpHandler(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
@@ -59,7 +74,9 @@ func ValidateChirpHandler(w http.ResponseWriter, req *http.Request) {
 	if len(params.Body) > 140 {
 		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
 	} else {
-		payload := response{Valid: true}
+		payload := response{
+			CleanedBody: filterMessage(params.Body),
+		}
 		respondWithJSON(w, req, payload)
 	}
 }
