@@ -42,7 +42,7 @@ func main() {
 	mux.Handle("/app/", cfg.MiddlewareMetricsInc(handler))
 	mux.HandleFunc("GET /api/healthz", cfg.HealthCheckHandler)
 	mux.HandleFunc("POST /api/users", cfg.UsersHandler)
-	mux.HandleFunc("POST /api/validate_chirp", cfg.ValidateChirpHandler)
+	mux.HandleFunc("POST /api/chirps", cfg.CreateChirpHandler)
 
 	server := http.Server{
 		Handler: mux,
