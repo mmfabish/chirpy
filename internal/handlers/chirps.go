@@ -13,12 +13,12 @@ import (
 	"github.com/mmfabish/chirpy/internal/database"
 )
 
-type createChirpRequest struct {
+type CreateChirpParams struct {
 	Body   string    `json:"body"`
 	UserID uuid.UUID `json:"user_id"`
 }
 
-type createChirpResponse struct {
+type ChirpDTO struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -43,38 +43,76 @@ func filterMessage(message string) string {
 	return strings.Join(words, " ")
 }
 
+func mapChirpEntityToDTO(chirpEntity *database.Chirp) ChirpDTO {
+	return ChirpDTO{
+		ID:        chirpEntity.ID,
+		CreatedAt: chirpEntity.CreatedAt,
+		UpdatedAt: chirpEntity.UpdatedAt,
+		Body:      chirpEntity.Body,
+		UserID:    chirpEntity.UserID,
+	}
+}
+
 func (cfg *apiConfig) CreateChirpHandler(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
-	chirpRequest := createChirpRequest{}
-	err := decoder.Decode(&chirpRequest)
+	params := CreateChirpParams{}
+	err := decoder.Decode(&params)
 	if err != nil {
 		log.Printf("Error decoding request: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if len(chirpRequest.Body) > 140 {
+	if len(params.Body) > 140 {
 		RespondWithError(w, http.StatusBadRequest, "Chirp is too long")
 	} else {
 		params := database.CreateChirpParams{
-			Body:   filterMessage(chirpRequest.Body),
-			UserID: chirpRequest.UserID,
+			Body:   filterMessage(params.Body),
+			UserID: params.UserID,
 		}
 
 		chirp, err := cfg.db.CreateChirp(context.Background(), params)
 		if err != nil {
-			log.Printf("Error creating user: %s", err)
+			log.Printf("Error creating chirp: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		response := createChirpResponse{
-			ID:        chirp.ID,
-			CreatedAt: chirp.CreatedAt,
-			UpdatedAt: chirp.UpdatedAt,
-			Body:      chirp.Body,
-			UserID:    chirp.UserID,
-		}
+		response := mapChirpEntityToDTO(&chirp)
+
 		RespondWithJSON(w, req, http.StatusCreated, response)
 	}
+}
+
+func (cfg *apiConfig) GetChirpsHandler(w http.ResponseWriter, req *http.Request) {
+	chirps, err := cfg.db.GetAllChirps(context.Background())
+	if err != nil {
+		log.Printf("Error retrieving chirps: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	data := make([]ChirpDTO, len(chirps))
+	for i, chirp := range chirps {
+		data[i] = mapChirpEntityToDTO(&chirp)
+	}
+
+	RespondWithJSON(w, req, http.StatusOK, data)
+}
+
+func (cfg *apiConfig) GetChirpHandler(w http.ResponseWriter, req *http.Request) {
+	chirpID, err := uuid.Parse(req.PathValue("chirpID"))
+	if err != nil {
+		log.Printf("Error converting string to UUID: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	chirp, err := cfg.db.GetChirpByID(context.Background(), chirpID)
+	if err != nil {
+		RespondWithError(w, http.StatusNotFound, "Not found")
+		return
+	}
+
+	RespondWithJSON(w, req, http.StatusOK, mapChirpEntityToDTO(&chirp))
 }
