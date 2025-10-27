@@ -35,7 +35,7 @@ func RespondWithError(w http.ResponseWriter, statusCode int, message string) {
 	w.Write(data)
 }
 
-func RespondWithJSON(w http.ResponseWriter, req *http.Request, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, req *http.Request, statusCode int, payload interface{}) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Error marshalling JSON: %s", err)
@@ -44,6 +44,6 @@ func RespondWithJSON(w http.ResponseWriter, req *http.Request, payload interface
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(statusCode)
 	w.Write(data)
 }

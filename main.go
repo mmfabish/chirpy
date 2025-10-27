@@ -32,11 +32,16 @@ func main() {
 
 	// admin endpoints
 	mux.HandleFunc("GET /admin/metrics", cfg.MetricsHandler)
-	mux.HandleFunc("POST /admin/reset", cfg.ResetHandler)
+
+	// only support reset in dev environment
+	if os.Getenv("PLATFORM") == "dev" {
+		mux.HandleFunc("POST /admin/reset", cfg.ResetHandler)
+	}
 
 	// api endpoints
 	mux.Handle("/app/", cfg.MiddlewareMetricsInc(handler))
 	mux.HandleFunc("GET /api/healthz", cfg.HealthCheckHandler)
+	mux.HandleFunc("POST /api/users", cfg.UsersHandler)
 	mux.HandleFunc("POST /api/validate_chirp", cfg.ValidateChirpHandler)
 
 	server := http.Server{

@@ -49,6 +49,6 @@ func (cfg *apiConfig) ValidateChirpHandler(w http.ResponseWriter, req *http.Requ
 		payload := response{
 			CleanedBody: filterMessage(params.Body),
 		}
-		RespondWithJSON(w, req, payload)
+		RespondWithJSON(w, req, http.StatusOK, payload)
 	}
 }
