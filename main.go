@@ -1,10 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
 
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+	"github.com/mmfabish/chirpy/internal/database"
 	"github.com/mmfabish/chirpy/internal/handlers"
 )
 
@@ -12,6 +18,7 @@ const filepathRoot = "."
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	db             *database.Queries
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -50,8 +57,17 @@ func healthCheckHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	godotenv.Load()
+
+	dbUrl := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cfg := apiConfig{db: database.New(db)}
+
 	mux := http.NewServeMux()
-	cfg := apiConfig{}
 	handler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
 
 	// admin endpoints
