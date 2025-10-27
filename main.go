@@ -36,9 +36,8 @@ func main() {
 
 	// api endpoints
 	mux.Handle("/app/", cfg.MiddlewareMetricsInc(handler))
-	mux.HandleFunc("GET /api/healthz", handlers.HealthCheckHandler)
-	mux.HandleFunc("POST /api/users", handlers.UsersHandler)
-	mux.HandleFunc("POST /api/validate_chirp", handlers.ValidateChirpHandler)
+	mux.HandleFunc("GET /api/healthz", cfg.HealthCheckHandler)
+	mux.HandleFunc("POST /api/validate_chirp", cfg.ValidateChirpHandler)
 
 	server := http.Server{
 		Handler: mux,
