@@ -14,8 +14,7 @@ import (
 )
 
 type CreateChirpParams struct {
-	Body   string    `json:"body"`
-	UserID uuid.UUID `json:"user_id"`
+	Body string `json:"body"`
 }
 
 type ChirpDTO struct {
@@ -64,9 +63,10 @@ func (cfg *apiConfig) CreateChirpHandler(w http.ResponseWriter, req *http.Reques
 	} else {
 		params := database.CreateChirpParams{
 			Body:   filterMessage(params.Body),
-			UserID: params.UserID,
+			UserID: cfg.subject,
 		}
 
+		log.Printf("Creating chirp for user %s", cfg.subject)
 		chirp, err := cfg.db.CreateChirp(context.Background(), params)
 		if err != nil {
 			log.Printf("Error creating chirp: %s", err)

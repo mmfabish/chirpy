@@ -6,21 +6,25 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/google/uuid"
 	"github.com/mmfabish/chirpy/internal/database"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
+	jwtSecret      string
+	subject        uuid.UUID
 }
 
 type apiError struct {
 	Message string `json:"message"`
 }
 
-func NewApiConfig(db *database.Queries) apiConfig {
+func NewApiConfig(db *database.Queries, jwtSecret string) apiConfig {
 	return apiConfig{
-		db: db,
+		db:        db,
+		jwtSecret: jwtSecret,
 	}
 }
 

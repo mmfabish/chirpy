@@ -25,7 +25,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cfg := handlers.NewApiConfig(database.New(db))
+	cfg := handlers.NewApiConfig(database.New(db), os.Getenv("JWT_SECRET"))
 	mux := http.NewServeMux()
 
 	handler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
@@ -48,7 +48,7 @@ func main() {
 
 	// chirps endpoints
 	mux.HandleFunc("GET /api/chirps", cfg.GetChirpsHandler)
-	mux.HandleFunc("POST /api/chirps", cfg.CreateChirpHandler)
+	mux.HandleFunc("POST /api/chirps", cfg.MiddlewareBearerAuth(cfg.CreateChirpHandler))
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.GetChirpHandler)
 
 	server := http.Server{
