@@ -14,6 +14,10 @@ type apiConfig struct {
 	db             *database.Queries
 }
 
+type apiError struct {
+	Message string `json:"message"`
+}
+
 func NewApiConfig(db *database.Queries) apiConfig {
 	return apiConfig{
 		db: db,
@@ -21,7 +25,7 @@ func NewApiConfig(db *database.Queries) apiConfig {
 }
 
 func RespondWithError(w http.ResponseWriter, statusCode int, message string) {
-	respBody := error{Message: message}
+	respBody := apiError{Message: message}
 
 	data, err := json.Marshal(respBody)
 	if err != nil {

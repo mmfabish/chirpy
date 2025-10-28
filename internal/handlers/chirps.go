@@ -26,10 +26,6 @@ type ChirpDTO struct {
 	UserID    uuid.UUID `json:"user_id"`
 }
 
-type error struct {
-	Message string `json:"error"`
-}
-
 func filterMessage(message string) string {
 	prohibitedWords := []string{"kerfuffle", "sharbert", "fornax"}
 	words := strings.Split(message, " ")

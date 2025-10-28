@@ -41,7 +41,12 @@ func main() {
 	// api endpoints
 	mux.Handle("/app/", cfg.MiddlewareMetricsInc(handler))
 	mux.HandleFunc("GET /api/healthz", cfg.HealthCheckHandler)
+
+	// user endpoints
+	mux.HandleFunc("POST /api/login", cfg.LoginHandler)
 	mux.HandleFunc("POST /api/users", cfg.UsersHandler)
+
+	// chirps endpoints
 	mux.HandleFunc("GET /api/chirps", cfg.GetChirpsHandler)
 	mux.HandleFunc("POST /api/chirps", cfg.CreateChirpHandler)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.GetChirpHandler)
