@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -113,6 +114,15 @@ func (cfg *apiConfig) GetChirpsHandler(w http.ResponseWriter, req *http.Request)
 	data := make([]ChirpDTO, len(chirps))
 	for i, chirp := range chirps {
 		data[i] = mapChirpEntityToDTO(&chirp)
+	}
+
+	sortDirection := strings.ToLower(req.URL.Query().Get("sort"))
+	switch sortDirection {
+	case "asc":
+		sort.Slice(data, func(i, j int) bool { return data[i].CreatedAt.Before(data[j].CreatedAt) })
+
+	case "desc":
+		sort.Slice(data, func(i, j int) bool { return data[j].CreatedAt.Before(data[i].CreatedAt) })
 	}
 
 	RespondWithJSON(w, req, http.StatusOK, data)
