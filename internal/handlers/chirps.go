@@ -112,3 +112,31 @@ func (cfg *apiConfig) GetChirpHandler(w http.ResponseWriter, req *http.Request) 
 
 	RespondWithJSON(w, req, http.StatusOK, mapChirpEntityToDTO(&chirp))
 }
+
+func (cfg *apiConfig) DeleteChirpHandler(w http.ResponseWriter, req *http.Request) {
+	chirpID, err := uuid.Parse(req.PathValue("chirpID"))
+	if err != nil {
+		log.Printf("Error converting string to UUID: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	chirp, err := cfg.db.GetChirpByID(context.Background(), chirpID)
+	if err != nil {
+		RespondWithError(w, http.StatusNotFound, "Chirp does not exist.")
+	}
+
+	if chirp.UserID != cfg.subject {
+		log.Printf("Unauthorized removal attempt of chrip %s by user %s", chirpID, cfg.subject)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	if err := cfg.db.DeleteChirp(context.Background(), chirpID); err != nil {
+		log.Printf("Error deleting chirp: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

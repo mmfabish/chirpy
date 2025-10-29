@@ -49,11 +49,13 @@ func main() {
 
 	// user endpoints
 	mux.HandleFunc("POST /api/users", cfg.UsersHandler)
+	mux.HandleFunc("PUT /api/users", cfg.MiddlewareBearerAuth(cfg.UpdateUsersHandler))
 
 	// chirps endpoints
 	mux.HandleFunc("GET /api/chirps", cfg.GetChirpsHandler)
 	mux.HandleFunc("POST /api/chirps", cfg.MiddlewareBearerAuth(cfg.CreateChirpHandler))
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.GetChirpHandler)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.MiddlewareBearerAuth(cfg.DeleteChirpHandler))
 
 	server := http.Server{
 		Handler: mux,
