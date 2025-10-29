@@ -81,11 +81,33 @@ func (cfg *apiConfig) CreateChirpHandler(w http.ResponseWriter, req *http.Reques
 }
 
 func (cfg *apiConfig) GetChirpsHandler(w http.ResponseWriter, req *http.Request) {
-	chirps, err := cfg.db.GetAllChirps(context.Background())
-	if err != nil {
-		log.Printf("Error retrieving chirps: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	var chirps []database.Chirp
+	var err error
+
+	authorId := req.URL.Query().Get("author_id")
+	if authorId != "" {
+		log.Printf("Getting chirps for author %s", authorId)
+
+		userID, err := uuid.Parse(authorId)
+		if err != nil {
+			log.Printf("Error parsing user ID from author_id parameter: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		chirps, err = cfg.db.GetChirpsByAuthorID(context.Background(), userID)
+		if err != nil {
+			log.Printf("Error retrieving chirps for author %s: %s", authorId, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		chirps, err = cfg.db.GetAllChirps(context.Background())
+		if err != nil {
+			log.Printf("Error retrieving chirps: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	data := make([]ChirpDTO, len(chirps))
