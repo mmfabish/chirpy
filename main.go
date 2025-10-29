@@ -42,8 +42,12 @@ func main() {
 	mux.Handle("/app/", cfg.MiddlewareMetricsInc(handler))
 	mux.HandleFunc("GET /api/healthz", cfg.HealthCheckHandler)
 
-	// user endpoints
+	// auth endpoints
 	mux.HandleFunc("POST /api/login", cfg.LoginHandler)
+	mux.HandleFunc("POST /api/refresh", cfg.RefreshHandler)
+	mux.HandleFunc("POST /api/revoke", cfg.RevokeHandler)
+
+	// user endpoints
 	mux.HandleFunc("POST /api/users", cfg.UsersHandler)
 
 	// chirps endpoints

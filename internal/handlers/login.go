@@ -9,20 +9,21 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mmfabish/chirpy/internal/auth"
+	"github.com/mmfabish/chirpy/internal/database"
 )
 
 type UserLoginParameters struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
-	Duration int    `json:"expires_in_seconds"`
 }
 
 type UserLoginResponse struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Token     string    `json:"token"`
+	ID           uuid.UUID `json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Email        string    `json:"email"`
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, req *http.Request) {
@@ -48,25 +49,34 @@ func (cfg *apiConfig) LoginHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var expiresIn time.Duration
-	if params.Duration == 0 {
-		expiresIn = time.Hour
-	} else {
-		expiresIn = time.Duration(params.Duration) * time.Second
-	}
-
-	token, err := auth.MakeJWT(userEntity.ID, cfg.jwtSecret, expiresIn)
+	// create access token
+	accessToken, err := auth.MakeJWT(userEntity.ID, cfg.jwtSecret, time.Hour)
 	if err != nil {
 		log.Printf("Error generating JWT: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	// create refresh token
+	refreshToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		log.Printf("Error generating refresh token: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	cfg.db.CreateRefreshToken(context.Background(), database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		UserID:    userEntity.ID,
+		ExpiresAt: time.Now().Add(time.Hour * 1440),
+	})
+
 	RespondWithJSON(w, req, http.StatusOK, UserLoginResponse{
-		ID:        userEntity.ID,
-		CreatedAt: userEntity.CreatedAt,
-		UpdatedAt: userEntity.UpdatedAt,
-		Email:     userEntity.Email,
-		Token:     token,
+		ID:           userEntity.ID,
+		CreatedAt:    userEntity.CreatedAt,
+		UpdatedAt:    userEntity.UpdatedAt,
+		Email:        userEntity.Email,
+		Token:        accessToken,
+		RefreshToken: refreshToken,
 	})
 }
