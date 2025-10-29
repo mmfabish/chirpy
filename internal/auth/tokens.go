@@ -4,21 +4,32 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 )
 
-func GetBearerToken(headers http.Header) (string, error) {
-	token := headers.Get("Authorization")
-	if token == "" {
+func parseAuthorizationHeader(headers http.Header, prefix string) (string, error) {
+	authString := headers.Get("Authorization")
+	if authString == "" {
 		return "", errors.New("authorization header missing from request")
 	}
 
-	if !strings.HasPrefix(token, "Bearer ") {
-		return "", errors.New("malformed Authorization header found in request")
+	authString = strings.TrimSpace(authString)
+
+	if !strings.HasPrefix(authString, prefix) {
+		return "", fmt.Errorf("malformed Authorization header: missing %s prefix", prefix)
 	}
 
-	return strings.TrimPrefix(token, "Bearer "), nil
+	return strings.TrimPrefix(authString, prefix), nil
+}
+
+func GetApiKey(headers http.Header) (string, error) {
+	return parseAuthorizationHeader(headers, "ApiKey ")
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	return parseAuthorizationHeader(headers, "Bearer ")
 }
 
 func MakeRefreshToken() (string, error) {

@@ -21,7 +21,7 @@ func (cfg *apiConfig) PolkaWebhookHandler(w http.ResponseWriter, req *http.Reque
 	payload := PolkaWebhookPayload{}
 	decoder := json.NewDecoder(req.Body)
 	if err := decoder.Decode(&payload); err != nil {
-		log.Fatal("Error occurred while parsing PolkaWebhook payload: %v", err)
+		log.Fatalf("Error occurred while parsing PolkaWebhook payload: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
