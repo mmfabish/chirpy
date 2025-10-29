@@ -22,18 +22,20 @@ type UpdateUserParams struct {
 }
 
 type UserDTO struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Email       string    `json:"email"`
+	IsChirpyRed bool      `json:"is_chirpy_red"`
 }
 
 func mapUserEntityToDTO(userEntity *database.User) UserDTO {
 	return UserDTO{
-		ID:        userEntity.ID,
-		CreatedAt: userEntity.CreatedAt,
-		UpdatedAt: userEntity.UpdatedAt,
-		Email:     userEntity.Email,
+		ID:          userEntity.ID,
+		CreatedAt:   userEntity.CreatedAt,
+		UpdatedAt:   userEntity.UpdatedAt,
+		Email:       userEntity.Email,
+		IsChirpyRed: userEntity.IsChirpyRed.Bool,
 	}
 }
 
@@ -60,6 +62,7 @@ func (cfg *apiConfig) UsersHandler(w http.ResponseWriter, req *http.Request) {
 		Email:          params.Email,
 		HashedPassword: hashed_password,
 	}
+
 	userEntity, err := cfg.db.CreateUser(context.Background(), dbCreateUserParams)
 	if err != nil {
 		log.Printf("Error creating user: %s", err)

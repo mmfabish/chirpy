@@ -57,6 +57,9 @@ func main() {
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.GetChirpHandler)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.MiddlewareBearerAuth(cfg.DeleteChirpHandler))
 
+	// polka endpoints
+	mux.HandleFunc("POST /api/polka/webhooks", cfg.PolkaWebhookHandler)
+
 	server := http.Server{
 		Handler: mux,
 		Addr:    ":8080",
